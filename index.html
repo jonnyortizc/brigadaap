@@ -46,36 +46,12 @@
             transform: translateY(-8px);
             box-shadow: 0 12px 24px rgba(0, 0, 0, 0.2);
         }
-
-        .progress-bar-bg {
-            background-color: rgba(255, 255, 255, 0.3);
-            border-radius: 9999px;
-            overflow: hidden;
-        }
-
-        .progress-bar-fg {
-            height: 100%;
-            background-color: var(--blanco);
-            border-radius: 9999px;
-            transition: width 0.5s ease-in-out;
-        }
         
-        #quiz-screen {
-            background-color: rgba(0,0,0,0.5);
+        #video-modal-overlay {
+            background-color: rgba(0,0,0,0.7);
             backdrop-filter: blur(5px);
-            transition: opacity 0.3s ease-in-out;
         }
 
-        .answer-option {
-            transition: all 0.2s ease;
-            border: 2px solid transparent;
-        }
-        
-        .answer-option:hover {
-            border-color: var(--verde);
-            transform: scale(1.03);
-        }
-        
         .badge-item {
             transition: all 0.3s ease;
             filter: grayscale(100%);
@@ -97,12 +73,12 @@
         .fade-out { animation: fadeOut 0.5s ease-in-out; }
 
         @keyframes fadeIn {
-            from { opacity: 0; transform: translateY(20px); }
-            to { opacity: 1; transform: translateY(0); }
+            from { opacity: 0; transform: scale(0.95); }
+            to { opacity: 1; transform: scale(1); }
         }
         @keyframes fadeOut {
-            from { opacity: 1; transform: translateY(0); }
-            to { opacity: 0; transform: translateY(-20px); }
+            from { opacity: 1; transform: scale(1); }
+            to { opacity: 0; transform: scale(0.95); }
         }
 
         #home-button {
@@ -157,7 +133,7 @@
 
     <!-- Pantalla del Cuestionario -->
     <div id="quiz-screen" class="fixed inset-0 z-50 flex-col justify-center items-center p-4 hidden">
-        <div id="quiz-box" class="bg-white rounded-2xl shadow-2xl w-full max-w-2xl p-6 md:p-8 relative fade-in">
+        <div id="quiz-box" class="bg-white rounded-2xl shadow-2xl w-full max-w-2xl p-6 md:p-8 relative">
             <!-- Vista de Aprendizaje -->
             <div id="learning-view">
                 <div class="text-center mb-4">
@@ -183,15 +159,26 @@
                 <div class="w-full bg-gray-200 rounded-full h-2.5 mb-6">
                     <div id="question-progress" class="h-2.5 rounded-full" style="width: 0%"></div>
                 </div>
-                
                 <p id="question-text" class="text-lg md:text-xl font-semibold mb-6 min-h-[80px]"></p>
-                
                 <div id="answer-options" class="grid grid-cols-1 md:grid-cols-2 gap-4"></div>
                 <div id="feedback-message" class="mt-6 text-center font-bold text-lg"></div>
             </div>
         </div>
     </div>
     
+    <!-- Modal de Video -->
+    <div id="video-modal-overlay" class="fixed inset-0 z-50 flex justify-center items-center p-4 hidden">
+        <div id="video-modal-box" class="bg-white rounded-2xl shadow-2xl w-full max-w-3xl relative fade-in">
+            <button id="close-video-modal" class="absolute -top-4 -right-4 bg-coral-theme text-white rounded-full h-10 w-10 flex items-center justify-center font-bold text-xl shadow-lg">&times;</button>
+            <div class="p-2">
+                <div class="aspect-w-16 aspect-h-9">
+                    <iframe id="youtube-iframe" class="rounded-xl" src="" title="YouTube video player" frameborder="0" allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture" allowfullscreen></iframe>
+                </div>
+            </div>
+             <h3 id="video-modal-title" class="font-bold text-center text-lg p-4"></h3>
+        </div>
+    </div>
+
     <!-- Botón de Inicio -->
     <button id="home-button" class="bg-coral-theme text-white p-4 rounded-full shadow-lg">
         <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"></path><polyline points="9 22 9 12 15 12 15 22"></polyline></svg>
@@ -203,7 +190,7 @@
             
             const questionDB = {
                 fire_prevention: {
-                    title: 'Prevención de Incendios', colorClass: 'bg-naranja-theme', textColorClass: 'text-naranja-theme',
+                    title: 'Prevención de Incendios', colorClass: 'bg-naranja-theme', textColorClass: 'text-naranja-theme', youtubeId: 'qcMv1EC550k',
                     icon: `<svg xmlns="http://www.w3.org/2000/svg" width="48" height="48" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M8.5 14.5A2.5 2.5 0 0 0 11 12c0-1.38-.5-2-1-3-1.072-2.143-.224-4.054 2-6 .5 2.5 2 4.9 4 6.5 2 1.6 3 3.5 3 5.5a7 7 0 1 1-14 0c0-1.153.433-2.294 1-3a2.5 2.5 0 0 0 2.5 2.5z"/></svg>`,
                     questions: [
                         { l: "El 'Triángulo del Fuego' representa los tres elementos necesarios para que exista fuego: Combustible, Oxígeno y Calor.", q: "¿Cuáles son los tres componentes del Triángulo del Fuego?", o: ["Madera, Plástico, Metal", "Agua, Espuma, Polvo", "Calor, Combustible, Oxígeno", "Ignición, Propagación, Extinción"], a: 2 },
@@ -211,15 +198,10 @@
                         { l: "La sobrecarga de enchufes y extensiones eléctricas es una de las principales causas de incendios.", q: "¿Cuál es una práctica de prevención de incendios eléctricos fundamental?", o: ["Usar cables debajo de las alfombras", "Sobrecargar las tomas múltiples", "Reemplazar fusibles por unos de mayor amperaje", "No sobrecargar enchufes ni extensiones"], a: 3 },
                         { l: "Los líquidos inflamables deben almacenarse en gabinetes de seguridad aprobados, lejos de fuentes de calor.", q: "¿Cómo se deben almacenar correctamente los líquidos inflamables?", o: ["En cualquier estante", "En gabinetes de seguridad, lejos del calor", "Debajo del lavaplatos", "Al aire libre"], a: 1 },
                         { l: "Las rutas de evacuación deben estar siempre despejadas, bien señalizadas y libres de cualquier tipo de obstrucción.", q: "Para garantizar una evacuación segura, las rutas de escape deben estar:", o: ["Bien iluminadas pero pueden tener cajas", "Libres de obstrucciones y señalizadas", "Cerradas con llave por seguridad", "Disponibles solo para gerentes"], a: 1 },
-                        { l: "El método de sofocación consiste en eliminar o reducir el oxígeno disponible para el fuego, por ejemplo, cubriendo una sartén en llamas con una tapa.", q: "Cubrir una sartén en llamas con una tapa es un método de extinción llamado:", o: ["Enfriamiento", "Inhibición", "Eliminación del combustible", "Sofocación"], a: 3 },
-                        { l: "El orden y la limpieza son fundamentales en la prevención, ya que evitan la acumulación de material combustible.", q: "¿Por qué mantener el orden y la limpieza es una medida clave de prevención?", o: ["Porque se ve más profesional", "Porque reduce la cantidad de material combustible", "Porque ayuda a encontrar los extintores", "Porque cumple una norma"], a: 1 },
-                        { l: "Los detectores de humo deben ser probados mensualmente y sus baterías cambiadas al menos una vez al año.", q: "¿Cuál es el mantenimiento mínimo recomendado para un detector de humo?", o: ["Probarlo cada 5 años", "Cambiar la batería cuando suene", "Probarlo mensualmente y cambiar baterías anualmente", "Limpiarlo con agua"], a: 2 },
-                        { l: "En caso de evacuación por incendio, nunca se deben usar los ascensores. Siempre use las escaleras.", q: "Durante una evacuación por incendio, ¿por qué nunca debes usar el ascensor?", o: ["Es más lento que las escaleras", "Es solo para los bomberos", "Puede fallar y convertirse en una trampa mortal", "Hace mucho ruido"], a: 2 },
-                        { l: "Un 'Punto de Encuentro' es un lugar seguro designado fuera del edificio donde todo el personal debe reunirse para ser contado.", q: "¿Qué es un 'Punto de Encuentro' en un plan de evacuación?", o: ["El lugar donde se originó el fuego", "Un área segura designada para reunirse tras evacuar", "La oficina del jefe de la brigada", "La cafetería"], a: 1 },
                     ]
                 },
                 extinguishers: {
-                    title: 'Manejo de Extintores', colorClass: 'bg-azul-theme', textColorClass: 'text-azul-theme',
+                    title: 'Manejo de Extintores', colorClass: 'bg-azul-theme', textColorClass: 'text-azul-theme', youtubeId: '4lPIMvAti_E',
                     icon: `<svg xmlns="http://www.w3.org/2000/svg" width="48" height="48" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M14 10.5V6.5C14 4 12.5 2 10.5 2S7 4 7 6.5V10.5"/><path d="M14 10.5H7"/><path d="M9.5 10.5V13.5C9.5 14.5 9 15 8.5 15H8"/><path d="M17 12L19 14"/><path d="M17 18L19 16"/><path d="M5 18H17C17 15 15 14 15 14H6.5C6.5 14 5 15 5 18Z"/><path d="M9.5 18V22"/></svg>`,
                     questions: [
                         { l: "La nemotecnia P.A.S.E. es la guía para usar un extintor: P-Tire del pasador, A-Apunte a la base del fuego, S-Apriete la palanca, E-Escanée o mueva de lado a lado.", q: "¿Qué significa la 'A' en la nemotecnia P.A.S.E. para usar un extintor?", o: ["Agitar el extintor", "Apuntar a la base del fuego", "Abrir la válvula", "Apartarse del fuego"], a: 1 },
@@ -227,47 +209,32 @@
                         { l: "Los extintores de Dióxido de Carbono (CO2) son ideales para fuegos eléctricos porque no conducen la electricidad y no dejan residuos.", q: "¿Cuál es la principal ventaja de un extintor de CO2 en equipos electrónicos?", o: ["Es el más barato", "No conduce la electricidad y no deja residuos", "Puede usarse en cualquier tipo de fuego", "Tiene mayor alcance"], a: 1 },
                         { l: "Nunca se debe usar un extintor de agua en un fuego eléctrico. El agua es un excelente conductor y podría electrocutar al operador.", q: "¿Por qué es extremadamente peligroso usar un extintor de agua en un fuego eléctrico?", o: ["Porque apaga el fuego muy rápido", "Porque el agua conduce la electricidad", "Porque daña el equipo", "Porque el agua se evapora"], a: 1 },
                         { l: "La distancia de ataque efectiva para la mayoría de los extintores portátiles es de 1 a 3 metros.", q: "¿Cuál es la distancia segura y efectiva para atacar un fuego con un extintor portátil?", o: ["Menos de 1 metro", "De 1 a 3 metros", "De 5 a 7 metros", "Más de 8 metros"], a: 1 },
-                        { l: "Los extintores Clase K están diseñados específicamente para fuegos en cocinas, involucrando aceites y grasas de cocina.", q: "Un fuego en una freidora industrial de una cocina requiere un extintor de Clase:", o: ["A", "B", "D", "K"], a: 3 },
-                        { l: "Siempre se debe atacar un fuego dándole la espalda a una ruta de escape segura para poder retirarte rápidamente si es necesario.", q: "Al usar un extintor, tu espalda siempre debe estar orientada hacia:", o: ["La pared más cercana", "El centro del fuego", "Una ruta de escape segura", "Otro compañero"], a: 2 },
-                        { l: "Los extintores deben ser inspeccionados mensualmente para asegurar que estén cargados (manómetro en verde) y sin daños.", q: "¿Con qué frecuencia se debe realizar una inspección visual a un extintor?", o: ["Diariamente", "Semanalmente", "Mensualmente", "Anualmente"], a: 2 },
-                        { l: "El Polvo Químico Seco (PQS) es un agente extintor versátil, efectivo para fuegos de clase A, B y C.", q: "Un extintor de PQS (Polvo Químico Seco) es comúnmente clasificado como:", o: ["Solo Clase A", "Solo Clase B", "Clase A, B y C", "Solo Clase K"], a: 2 },
-                        { l: "Después de usar un extintor, incluso por un segundo, debe ser reportado para recarga o reemplazo. Nunca se debe colgar un extintor usado.", q: "¿Qué se debe hacer con un extintor después de usarlo, aunque sea un poco?", o: ["Limpiarlo y colgarlo de nuevo", "Dejarlo en el suelo y reportarlo para recarga", "Guardarlo para la próxima vez", "Verificar si todavía se siente pesado"], a: 1 },
                     ]
                 },
                 scene_access: {
-                    title: 'Acceso a la Escena', colorClass: 'bg-coral-theme', textColorClass: 'text-coral-theme',
+                    title: 'Acceso a la Escena', colorClass: 'bg-coral-theme', textColorClass: 'text-coral-theme', youtubeId: 'oI42Zz8x9g4',
                     icon: `<svg xmlns="http://www.w3.org/2000/svg" width="48" height="48" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21.21 15.89A10 10 0 1 1 8 2.83"></path><path d="M22 12A10 10 0 0 0 12 2v10z"></path><path d="M12 22a10 10 0 0 0 10-10h-10z"></path><circle cx="12" cy="12" r="3"></circle></svg>`,
                     questions: [
                         { l: "La seguridad del rescatista es lo primero. Un rescatista herido no puede ayudar a nadie.", q: "Al llegar a una escena, ¿cuál es la primera prioridad?", o: ["Correr a ayudar a la víctima", "Evaluar la seguridad de la escena", "Llamar a los medios", "Buscar testigos"], a: 1 },
                         { l: "La Zona Caliente es el área de máxima contaminación y riesgo, donde solo entra personal especializado.", q: "La 'Zona Caliente' en un incidente con materiales peligrosos es donde...", o: ["Se realiza la descontaminación", "Se atiende a los pacientes", "Está el producto y el mayor riesgo", "Se ubica el Puesto de Comando"], a: 2 },
                         { l: "CINECSS es una nemotecnia para recordar los 6 elementos a evaluar para la seguridad de la escena: Control, Incendio, Nubes, Electricidad, Caídas, Sustancias.", q: "Al evaluar la seguridad de la escena, se debe usar la nemotecnia:", o: ["CINECSS", "ABCDEX", "START", "SOAP"], a: 0 },
-                        { l: "La 'C' en CINECSS significa 'Control de la escena'. Implica asegurar que el área esté bajo control.", q: "La 'C' en CINECSS se refiere a:", o: ["Clima", "Comandante", "Control de la escena", "Circulación"], a: 2 },
                         { l: "Aislar la escena significa crear un perímetro de seguridad para mantener a los curiosos fuera y evitar que la evidencia se contamine.", q: "¿Qué significa 'aislar la escena'?", o: ["Apagar todas las luces", "Establecer un perímetro para controlar el acceso", "No dejar que nadie salga", "Hablar con todos los presentes"], a: 1 },
-                        { l: "La electricidad es un peligro mortal invisible. Asume siempre que los cables caídos tienen corriente y espera a los expertos.", q: "Si encuentras cables eléctricos caídos en la escena, tú debes:", o: ["Moverlos con un palo de madera", "Asumir que no tienen corriente", "Mantener la distancia y avisar a expertos", "Pasar por encima con cuidado"], a: 2 },
-                        { l: "La Zona Tibia es una zona de transición entre la Zona Caliente y la Fría, y es donde se realiza la descontaminación.", q: "La Zona Tibia es el área para:", o: ["Primeros auxilios básicos", "Descontaminación del personal", "Reuniones de planificación", "Estacionar vehículos"], a: 1 },
                         { l: "La evaluación 360° consiste en caminar completamente alrededor del incidente para identificar todos los peligros, víctimas y accesos.", q: "La evaluación 360° de la escena implica:", o: ["Mirar solo hacia el frente", "Girar 360 grados sobre tu eje", "Caminar alrededor del incidente para verlo completo", "Usar binoculares"], a: 2 },
-                        { l: "Un accidente vehicular puede tener muchos peligros: tráfico, vidrios, derrames y airbags sin desplegar.", q: "¿Cuál es un peligro potencial en una escena de trauma vehicular?", o: ["Tráfico, vidrios rotos, bolsas de aire sin activar", "Música alta", "Curiosos", "Lluvia"], a: 0 },
-                        { l: "Tu Equipo de Protección Personal (EPP) es tu armadura. Es la barrera más importante entre tu seguridad y los peligros de la escena.", q: "El uso de Equipo de Protección Personal (EPP) es fundamental para:", o: ["Verse profesional", "Proteger al rescatista de lesiones o enfermedades", "Identificar al líder", "Mantener el calor"], a: 1 },
                     ]
                 },
                 sci: {
-                    title: 'Sistema Comando de Incidentes', colorClass: 'bg-verde-theme', textColorClass: 'text-verde-theme',
+                    title: 'Sistema Comando de Incidentes', colorClass: 'bg-verde-theme', textColorClass: 'text-verde-theme', youtubeId: 'VdYwW0diliM',
                     icon: `<svg xmlns="http://www.w3.org/2000/svg" width="48" height="48" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"></path><path d="M12 11v0M12 7v0"></path><path d="M12 15v0"></path></svg>`,
                     questions: [
                         { l: "El Comandante del Incidente (CI) es la máxima autoridad en la escena y es responsable de la gestión integral del evento.", q: "¿Cuál es la función principal del Comandante del Incidente (CI)?", o: ["Evaluar a los pacientes", "Gestionar todas las operaciones del incidente", "Hablar con los medios", "Conseguir recursos"], a: 1 },
                         { l: "La Unidad de Mando asegura que cada persona reciba órdenes de un solo supervisor, evitando confusión.", q: "El principio de 'Unidad de Mando' significa que cada persona...", o: ["Puede tener varios jefes", "Reporta a un solo supervisor", "Es el jefe de sí mismo", "No necesita supervisión"], a: 1 },
                         { l: "La sección de Logística es el 'supermercado' del incidente. Se encarga de proveer todo lo necesario: personal, equipos y suministros.", q: "¿Qué sección es responsable de conseguir personal, equipos y suministros?", o: ["Planificación", "Operaciones", "Logística", "Finanzas/Administración"], a: 2 },
-                        { l: "El Oficial de Seguridad monitorea las condiciones y tiene la autoridad para detener cualquier operación insegura.", q: "El Oficial de Seguridad es responsable de:", o: ["La seguridad de todo el personal involucrado", "Pagar las cuentas del incidente", "Dirigir las tácticas", "Crear el plan del incidente"], a: 0 },
-                        { l: "El Plan de Acción del Incidente (PAI) es el documento que guía todas las operaciones de respuesta.", q: "¿Qué significa el acrónimo P.A.I. en el SCI?", o: ["Plan de Acción Inmediata", "Protocolo de Ayuda Interna", "Plan de Acción del Incidente", "Personal de Apoyo Inicial"], a: 2 },
-                        { l: "El Área de Espera es donde se concentran los recursos que llegan a la escena hasta que se les asigna una tarea.", q: "El área donde se concentran los recursos mientras esperan ser asignados se llama:", o: ["Base", "Campamento", "Área de Espera", "Helipunto"], a: 2 },
                         { l: "La estructura del SCI es modular, lo que significa que puede crecer o decrecer según la magnitud del evento.", q: "La estructura modular del SCI permite que la organización...", o: ["Sea siempre grande", "Se expanda o contraiga según la necesidad", "Tenga una estructura fija", "Solo funcione en desastres"], a: 1 },
-                        { l: "El Oficial de Información Pública (PIO) es el único punto de contacto para los medios, asegurando que la información sea precisa.", q: "El Oficial de Información Pública (PIO) es el contacto principal para:", o: ["Los medios y el público", "El personal de la brigada", "El director de la clínica", "Las aseguradoras"], a: 0 },
                         { l: "El Tramo de Control ideal es de 3 a 7 subordinados por cada líder para mantener una supervisión efectiva.", q: "¿Cuál es el rango óptimo del 'Tramo de Control' en el SCI?", o: ["1 a 2 subordinados", "10 a 15 subordinados", "3 a 7 subordinados", "Más de 20 subordinados"], a: 2 },
-                        { l: "El Puesto de Comando (PC) es el centro neurálgico desde donde se dirige y coordina toda la respuesta.", q: "El establecimiento del Puesto de Comando es una de las primeras prioridades para:", o: ["Tener un lugar para descansar", "Centralizar el mando y control", "Guardar los equipos", "Atender a los heridos"], a: 1 },
                     ]
                 },
                 abcdex: {
-                    title: 'Evaluación Primaria ABCDEX', colorClass: 'bg-gris-theme', textColorClass: 'text-gris-theme',
+                    title: 'Evaluación Primaria ABCDEX', colorClass: 'bg-gris-theme', textColorClass: 'text-gris-theme', youtubeId: 'gJQc2IFL2U0',
                     icon: `<svg xmlns="http://www.w3.org/2000/svg" width="48" height="48" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M22 12h-4l-3 9L9 3l-3 9H2"></path></svg>`,
                     questions: [
                         { l: "La 'A' significa Vía Aérea (Airway). La prioridad es asegurar que esté abierta y despejada, protegiendo siempre la columna cervical.", q: "¿Qué evalúa la 'A' en ABCDEX?", o: ["Actitud del paciente", "Apertura de la vía Aérea y control cervical", "Amigos presentes", "Alergias"], a: 1 },
@@ -275,11 +242,6 @@
                         { l: "La 'C' es por Circulación. Se busca el pulso y, crucialmente, se controla cualquier sangrado grave que amenace la vida.", q: "La 'C' (Circulación) evalúa principalmente:", o: ["El color de la piel", "La temperatura corporal", "La presencia de pulso y hemorragias severas", "La conciencia del paciente"], a: 2 },
                         { l: "La 'D' se refiere al Déficit Neurológico. Se evalúa el estado de conciencia del paciente para detectar lesiones en la cabeza.", q: "¿Qué escala se utiliza comúnmente en la 'D' (Déficit neurológico)?", o: ["Escala de Dolor", "Escala de Glasgow", "Escala de Ansiedad", "Escala de Richter"], a: 1 },
                         { l: "La 'E' es por Exposición. Se debe descubrir al paciente para buscar lesiones ocultas, pero es vital protegerlo del frío (hipotermia).", q: "La 'E' (Exposición) implica descubrir al paciente para buscar lesiones, pero es crucial:", o: ["Hacerlo rápidamente en público", "Cortar toda la ropa siempre", "Prevenir la hipotermia", "Tomar fotografías"], a: 2 },
-                        { l: "Si no hay sospecha de lesión en el cuello, la maniobra de Frente-Mentón es la forma más rápida de abrir la vía aérea.", q: "En un paciente inconsciente sin trauma cervical, la maniobra para abrir la vía aérea es:", o: ["Frente-mentón", "Tracción mandibular", "Meter los dedos", "Soplarle en la cara"], a: 0 },
-                        { l: "El relleno capilar mide la perfusión de los tejidos. Más de 2 segundos en volver a su color normal indica posibles problemas de circulación.", q: "¿Qué es el 'Relleno Capilar' evaluado en la 'C'?", o: ["El tiempo que tarda la piel en volver a su color", "La cantidad de sangre perdida", "El nivel de oxígeno", "La presión arterial"], a: 0 },
-                        { l: "La escala AVDI clasifica la conciencia: A-Alerta, V-Voz, D-Dolor, I-Inconsciente. Es una evaluación neurológica rápida.", q: "Un paciente que responde solo a estímulos dolorosos se clasifica en la escala AVDI como:", o: ["A (Alerta)", "V (Verbal)", "D (Dolor)", "I (Inconsciente)"], a: 2 },
-                        { l: "Detener un sangrado que brota a chorros es la principal causa de muerte prevenible en trauma y es una prioridad en la 'C'.", q: "El control de una hemorragia externa masiva es una prioridad en la letra:", o: ["A", "B", "C", "D"], a: 2 },
-                        { l: "El formato XABCDE añade la 'X' para priorizar el control de 'Hemorragias Exanguinantes' antes que cualquier otra cosa.", q: "La 'X' en algunas guías (XABCDE) se ha añadido para priorizar:", o: ["Radiografías (X-Rays)", "El control de hemorragias exanguinantes", "Oxígeno (Oxygen)", "Nada, es un error"], a: 1 },
                     ]
                 }
             };
@@ -295,6 +257,7 @@
 
             let state = { score: 0, currentTopicId: null, currentQuestionIndex: 0, quizScore: 0, topics: {} };
             
+            // --- DOM Elements ---
             const mainScreen = document.getElementById('main-screen');
             const quizScreen = document.getElementById('quiz-screen');
             const modulesContainer = document.getElementById('modules-container');
@@ -320,6 +283,14 @@
             const quizScoreDisplay = document.getElementById('quiz-score');
             const quizScoreTitle = document.getElementById('quiz-score-title');
 
+            // --- Video Modal Elements ---
+            const videoModalOverlay = document.getElementById('video-modal-overlay');
+            const videoModalBox = document.getElementById('video-modal-box');
+            const closeVideoModalBtn = document.getElementById('close-video-modal');
+            const youtubeIframe = document.getElementById('youtube-iframe');
+            const videoModalTitle = document.getElementById('video-modal-title');
+
+
             function saveState() { localStorage.setItem('brigadAAPState', JSON.stringify(state)); }
 
             function loadState() {
@@ -327,14 +298,8 @@
                 if (savedState) {
                     state = JSON.parse(savedState);
                 } else {
-                    // Estado para un usuario nuevo
-                    state = {
-                        score: 0,
-                        topics: {}
-                    };
+                    state = { score: 0, topics: {} };
                 }
-
-                // Asegura que todos los temas de la BD existan en el estado y estén desbloqueados
                 Object.keys(questionDB).forEach(key => {
                     if (!state.topics[key]) {
                         state.topics[key] = { progress: 0, completed: false };
@@ -348,6 +313,12 @@
                 renderAll();
                 homeButton.addEventListener('click', goHome);
                 continueToQuestionBtn.addEventListener('click', displayQuestion);
+                closeVideoModalBtn.addEventListener('click', closeVideoModal);
+                videoModalOverlay.addEventListener('click', (e) => {
+                    if (e.target === videoModalOverlay) {
+                        closeVideoModal();
+                    }
+                });
             }
 
             function renderAll() {
@@ -361,14 +332,12 @@
                 Object.keys(questionDB).forEach(key => {
                     const topic = questionDB[key];
                     const topicState = state.topics[key];
-                    const isLocked = !topicState.unlocked; // This will always be false now
 
                     const card = document.createElement('div');
-                    card.className = `card rounded-xl shadow-lg flex flex-col cursor-pointer ${topic.colorClass}`;
-                    card.dataset.topicId = key;
+                    card.className = `card rounded-xl shadow-lg flex flex-col cursor-pointer ${topic.colorClass} relative`;
                     
                     card.innerHTML = `
-                        <div class="card-content p-6 text-white text-center flex flex-col items-center h-full">
+                        <div class="card-content p-6 text-white text-center flex flex-col items-center h-full" data-topic-id="${key}">
                             <div class="mb-4 opacity-80">${topic.icon}</div>
                             <h3 class="text-lg font-bold mb-2 flex-grow">${topic.title}</h3>
                             <div class="w-full progress-bar-bg h-3 my-4">
@@ -379,9 +348,16 @@
                                 ${topicState.completed ? 'Repasar' : 'Comenzar'}
                             </div>
                         </div>
+                        <button class="support-btn absolute top-2 right-2 bg-white/30 text-white rounded-full h-8 w-8 flex items-center justify-center font-bold text-xl hover:bg-white/50" data-topic-id="${key}" title="Material de Apoyo">
+                            <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="m23 7-7 5 7 5V7z"></path><rect x="1" y="5" width="15" height="14" rx="2" ry="2"></rect></svg>
+                        </button>
                     `;
 
-                    card.addEventListener('click', () => startQuiz(key));
+                    card.querySelector('.card-content').addEventListener('click', (e) => startQuiz(e.currentTarget.dataset.topicId));
+                    card.querySelector('.support-btn').addEventListener('click', (e) => {
+                        e.stopPropagation(); // Evita que el quiz inicie al hacer clic en el botón de ayuda
+                        openVideoModal(e.currentTarget.dataset.topicId);
+                    });
                     modulesContainer.appendChild(card);
                 });
             }
@@ -418,13 +394,14 @@
                 mainScreen.classList.add('hidden');
                 quizScreen.classList.remove('hidden');
                 quizScreen.classList.add('flex');
-                quizBox.classList.remove('fade-out');
+                quizBox.classList.remove('fade-out', 'hidden');
                 quizBox.classList.add('fade-in');
                 quizScoreDisplay.textContent = state.quizScore;
                 displayLearning();
             }
 
             function displayLearning() {
+                quizBox.classList.remove('hidden');
                 learningView.classList.remove('hidden');
                 questionView.classList.add('hidden');
                 const topicId = state.currentTopicId;
@@ -482,7 +459,6 @@
 
                 const options = answerOptionsContainer.querySelectorAll('.answer-option');
                 options.forEach(btn => btn.disabled = true);
-                selectedButton.classList.add('selected');
 
                 if (isCorrect) {
                     state.quizScore += 10;
@@ -533,10 +509,26 @@
                 quizBox.classList.add('fade-out');
                 setTimeout(() => {
                     quizScreen.classList.add('hidden');
-                    quizScreen.classList.remove('flex');
                     mainScreen.classList.remove('hidden');
                     renderAll();
                 }, 400);
+            }
+
+            // --- Video Modal Logic ---
+            function openVideoModal(topicId) {
+                const topic = questionDB[topicId];
+                if (!topic || !topic.youtubeId) return;
+
+                youtubeIframe.src = `https://www.youtube.com/embed/${topic.youtubeId}`;
+                videoModalTitle.textContent = `Material de Apoyo: ${topic.title}`;
+                videoModalOverlay.classList.remove('hidden');
+                videoModalOverlay.classList.add('flex');
+            }
+
+            function closeVideoModal() {
+                youtubeIframe.src = '';
+                videoModalOverlay.classList.add('hidden');
+                videoModalOverlay.classList.remove('flex');
             }
 
             init();
