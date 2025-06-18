@@ -100,7 +100,7 @@
     <div id="main-screen">
         <header class="bg-white shadow-md p-4 flex justify-between items-center">
             <div class="flex items-center gap-4">
-                <img src="https://storage.googleapis.com/gemini-prod-us-west1-assets/1f94851259e8f49491a617a26860d5b4" alt="Logo Clínica del Prado" class="h-16 w-16 object-contain">
+                <img src="https://drive.google.com/file/d/1W8hiccWBQHr4NdPq80XcC7qPksUuIJ3z/view?usp=drivesdk" alt="Logo Clínica del Prado" class="h-16 w-16 object-contain">
                 <h1 class="text-2xl md:text-3xl font-bold text-verde-theme">BrigadAAP</h1>
             </div>
             <div id="user-stats" class="text-right">
@@ -168,7 +168,7 @@
     
     <!-- Modal de Video -->
     <div id="video-modal-overlay" class="fixed inset-0 z-50 flex justify-center items-center p-4 hidden">
-        <div id="video-modal-box" class="bg-white rounded-2xl shadow-2xl w-full max-w-3xl relative fade-in">
+        <div id="video-modal-box" class="bg-white rounded-2xl shadow-2xl w-full max-w-6xl relative fade-in">
             <button id="close-video-modal" class="absolute -top-4 -right-4 bg-coral-theme text-white rounded-full h-10 w-10 flex items-center justify-center font-bold text-xl shadow-lg">&times;</button>
             <div class="p-2">
                 <div class="aspect-w-16 aspect-h-9">
@@ -355,7 +355,7 @@
 
                     card.querySelector('.card-content').addEventListener('click', (e) => startQuiz(e.currentTarget.dataset.topicId));
                     card.querySelector('.support-btn').addEventListener('click', (e) => {
-                        e.stopPropagation(); // Evita que el quiz inicie al hacer clic en el botón de ayuda
+                        e.stopPropagation();
                         openVideoModal(e.currentTarget.dataset.topicId);
                     });
                     modulesContainer.appendChild(card);
@@ -519,7 +519,7 @@
                 const topic = questionDB[topicId];
                 if (!topic || !topic.youtubeId) return;
 
-                youtubeIframe.src = `https://www.youtube.com/embed/${topic.youtubeId}`;
+                youtubeIframe.src = `https://www.youtube.com/embed/${topic.youtubeId}?autoplay=1&mute=1`;
                 videoModalTitle.textContent = `Material de Apoyo: ${topic.title}`;
                 videoModalOverlay.classList.remove('hidden');
                 videoModalOverlay.classList.add('flex');
